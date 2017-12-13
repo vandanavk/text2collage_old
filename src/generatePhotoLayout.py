@@ -9,7 +9,7 @@ from PIL import ImageFile
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-np.random.seed(0)
+# np.random.seed(0)
 
 
 class LayoutNode:
@@ -60,7 +60,9 @@ class Agent:
             name = self.getInternalNode()
             iTree.create_node(name, nodenum, parent=(nodenum / 2), data=LayoutNode(name, w, h))
             nodenum += 1
-        for i in range(n):
+        usedimage = [x for x in range(n)]
+        random.shuffle(usedimage)
+        for i in range(len(usedimage)):
             w, h = self.cw, self.ch
             name = self.imgdata.keys()[i]
             iTree.create_node(name, nodenum, parent=(nodenum / 2), data=LayoutNode(name, w, h))
@@ -325,18 +327,22 @@ class Environment:
         canvasw, canvash = 1920, 1080
         print "GA to generate a compact collage begins..."
         print "Enter the desired canvas size: "
-        w = int(raw_input("Width "))
-        h = int(raw_input("Height"))
+        w = raw_input("Width ")
+        h = raw_input("Height ")
         if w:
-            canvasw = w
+            canvasw = int(w)
         if h:
-            canvash = h
+            canvash = int(h)
 
         beta = 3
         imgdata = {}
         for i, n in enumerate(nouns):
             try:
-                n = ''.join(x for x in n)
+                # t = word_score[n]
+                if isinstance(n, list):
+                    n = ''.join(x for x in n)
+                else:
+                    n = n.replace(' ', '')
                 im = Image.open(directory + '/images/' + n + '.jpg')
                 w, h = im.size
                 ar = float(w) / float(h)

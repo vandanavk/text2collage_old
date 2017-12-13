@@ -55,10 +55,17 @@ class Agent:
             for tag in self.tagset[i]:
                 for x in tag.split():
                     querytag.append(x.lower())
-            qcopy = ''.join(x for x in q)
+            if isinstance(q, list):
+                qcopy = ''.join(x for x in q)
+            else:
+                qcopy = q.replace(' ', '')
             if os.path.exists(self.directory + "/images/" + qcopy + ".jpg"):
                 continue
-            q = '+'.join(x for x in q)
+            if isinstance(q, list):
+                q = '+'.join(x for x in q)
+            else:
+                q = q.replace(' ', '+')
+
             url = 'https://www.google.com/search?q=' + q + '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg&safe=active'
             soup = BeautifulSoup(urllib2.urlopen(urllib2.Request(url, headers=header)), 'html.parser')
             for a in soup.find_all("div", {"class": "rg_meta"}):
