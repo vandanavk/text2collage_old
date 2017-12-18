@@ -247,14 +247,14 @@ class Agent:
                 node.data.height = float(node.data.width) / float(ar) - self.beta
                 # print node.data.name, node.data.width, node.data.height
 
-    def __create_value(self, node):
-        """
-        As part of mutation, change the name of the internal node
-        :param node: node of the tree
-        :return: changed name of the internal node
-        """
-        node.data.name = self.getInternalNode()
-        return node
+    # def __create_value(self, node):
+    #     """
+    #     As part of mutation, change the name of the internal node
+    #     :param node: node of the tree
+    #     :return: changed name of the internal node
+    #     """
+    #     node.data.name = self.getInternalNode()
+    #     return node
 
     # Mutate genes
     def __mutate(self, individual, indpb):
@@ -266,7 +266,24 @@ class Agent:
         """
         for i in range(1, len(self.imgdata)):
             if random.random() <= indpb:
-                self.__create_value(individual.get_node(i))
+                node = individual.get_node(i)
+                if node.data.name == 'H':
+                    node.tag = node.data.name = 'V'
+                else:
+                    node.tag = node.data.name = 'H'
+                # self.__create_value(individual.get_node(i))
+
+        # for i in range(len(self.imgdata), len(individual.nodes) + 1):
+        #     if random.random() <= indpb:
+        #         j = i
+        #         while j == i:
+        #             j = random.randint(len(self.imgdata), len(individual.nodes))
+        #         basenode = individual.get_node(i)
+        #         swapnode = individual.get_node(j)
+        #         basename = basenode.data.name
+        #         swapname = swapnode.data.name
+        #         basenode.tag = basenode.data.name = swapname
+        #         swapnode.tag = swapnode.data.name = basename
 
         self.recomputeWH(individual)
         return individual,
