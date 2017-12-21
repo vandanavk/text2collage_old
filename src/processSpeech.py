@@ -3,7 +3,7 @@ import string
 from time import time
 import os
 import nltk
-from pattern.en import singularize
+from pattern.en import singularize, pluralize
 from rake_nltk import Rake
 import codecs
 
@@ -48,7 +48,8 @@ class Agent:
                     item, tag = nltk.pos_tag(tokens)[0]
                     if 'NN' in tag:
                         if len(item) > 1:
-                            final_nouns.append(singularize(item))
+                            if singularize(item) not in final_nouns and pluralize(item) not in final_nouns:
+                                final_nouns.append(item)
                 else:
                     final_nouns.append(n)
             return final_nouns
@@ -64,7 +65,8 @@ class Agent:
                     item, tag = nltk.pos_tag(tokens)[0]
                     if 'NN' in tag:
                         if len(item) > 1:
-                            final_nouns.append(singularize(item))
+                            if singularize(item) not in final_nouns and pluralize(item) not in final_nouns:
+                                final_nouns.append(item)
                 else:
                     final_nouns.append(n)
             meaningset.append(final_nouns)
@@ -86,7 +88,8 @@ class Agent:
                     item, tag = nltk.pos_tag(tokens)[0]
                     if 'NN' in tag:
                         if len(item) > 1:
-                            nouns.append(singularize(item))
+                            if singularize(item) not in nouns and pluralize(item) not in nouns:
+                                nouns.append(item)
                 else:
                     nouns.append(n)
             return nouns
@@ -97,8 +100,9 @@ class Agent:
             final_nouns = []
             for item, t in tagged:
                 if 'NN' in t:
-                    if singularize(item) not in final_nouns and len(item) > 1:
-                        final_nouns.append(singularize(item))
+                    if len(item) > 1:
+                        if singularize(item) not in final_nouns and pluralize(item) not in final_nouns:
+                            final_nouns.append(item)
             nouns.append(final_nouns)
         return nouns
 
