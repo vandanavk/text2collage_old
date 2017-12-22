@@ -66,7 +66,7 @@ class Agent:
             else:
                 q = q.replace(' ', '+')
 
-            url = 'https://www.google.com/search?q=' + q + '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg&safe=active'
+            url = 'https://www.google.com/search?q=' + q + '&espv=2&biw=1366&bih=667&site=webhp&source=lnms&tbm=isch&sa=X&ei=XosDVaCXD8TasATItgE&ved=0CAcQ_AUoAg&safe=active&tbs=sur:fm'
             soup = BeautifulSoup(urllib2.urlopen(urllib2.Request(url, headers=header)), 'html.parser')
             for a in soup.find_all("div", {"class": "rg_meta"}):
                 link, Type, tags = json.loads(a.text)["ou"], json.loads(a.text)["ity"], json.loads(a.text)["s"]
