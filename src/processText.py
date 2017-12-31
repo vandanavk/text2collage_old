@@ -136,10 +136,19 @@ class Environment:
         print "Note: the input folder name can be different\n"
         folder = raw_input("Enter the name of the folder that contains input text: ")
 
-        for filename in os.listdir(directory+'/'+folder):
+        osname = os.uname()[0]
+        if osname == 'Windows':
+            openfolder = directory + "\\" + folder
+        else:
+            openfolder = directory + '/' + folder
+        for filename in os.listdir(openfolder):
             if filename.endswith('.txt'):
                 print "\nConverting "+filename+" to an illustration"
-                f = open(directory+'/' + folder + '/' + filename, 'r')
+                if osname == 'Windows':
+                    openfile = directory + '\\' + folder + '\\' + filename
+                else:
+                    openfile = directory + '/' + folder + '/' + filename
+                f = open(openfile, 'r')
                 text = f.read().decode('ascii', 'ignore')
                 f.close()
 

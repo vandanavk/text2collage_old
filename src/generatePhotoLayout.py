@@ -10,7 +10,7 @@ from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 # np.random.seed(0)
-
+osname = os.uname()[0]
 
 class LayoutNode:
     """
@@ -360,7 +360,11 @@ class Environment:
                     n = ''.join(x for x in n)
                 else:
                     n = n.replace(' ', '')
-                im = Image.open(directory + '/images/' + n + '.jpg')
+                if osname == 'Windows':
+                    openfolder = directory + '\\images\\'
+                else:
+                    openfolder = directory + '/images/'
+                im = Image.open(openfolder + n + '.jpg')
                 w, h = im.size
                 ar = float(w) / float(h)
                 t = random.randint(1, 5)
@@ -394,7 +398,11 @@ class Environment:
 
         for i in range(len(imgdata), len(indi.nodes) + 1):
             node = indi.get_node(i)
-            name = directory + '/images/' + node.data.name + '.jpg'
+            if osname == 'Windows':
+                name = directory + '\\images\\' + node.data.name + '.jpg'
+            else:
+                name = directory + '/images/' + node.data.name + '.jpg'
+
             im = Image.open(name)
             im = im.resize((int(node.data.width), int(node.data.height)), Image.ANTIALIAS)
             imgkey = imgdata.keys()[i - len(imgdata)]
@@ -409,10 +417,19 @@ class Environment:
 
         html = html + img + """</html>"""
 
-        if not os.path.exists(directory + '/results'):
-            os.makedirs(directory + '/results')
+        if osname == 'Windows':
+            openfolder = directory + '\\results'
+        else:
+            openfolder = directory + '/results'
+        if not os.path.exists(openfolder):
+            os.makedirs(openfolder)
         soup = BeautifulSoup(html, 'html.parser')
-        with open(directory + '/results/' + filename.split('.txt')[0] + '.html', 'w') as f:
+
+        if osname == 'Windows':
+            openfolder = directory + '\\results\\'
+        else:
+            openfolder = directory + '/results/'
+        with open(openfolder + filename.split('.txt')[0] + '.html', 'w') as f:
             f.write(str(soup.prettify('utf-8')))
 
-        print "The collage is saved in " + directory + '/results/' + filename.split('.txt')[0] + ".html\n"
+        print "The collage is saved in " + openfolder + filename.split('.txt')[0] + ".html\n"

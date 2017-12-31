@@ -9,6 +9,7 @@ header = {
             'User-Agent': "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.134 Safari/537.36"
         }
 
+osname = os.uname()[0]
 
 class Agent:
     def __init__(self, q, t, d):
@@ -29,11 +30,15 @@ class Agent:
         :param qcopy: copy of the query without spaces
         :param q: query keywords
         """
+        if osname == 'Windows':
+            openfolder = self.directory + "\\images\\" + qcopy
+        else:
+            openfolder = self.directory + "/images/" + qcopy
         for t in sortedmatchingtag:
             try:
                 req = urllib2.Request(t, headers={'User-Agent': header})
                 raw_img = urllib2.urlopen(req).read()
-                f = open(self.directory + "/images/" + qcopy + ".jpg", 'wb')
+                f = open(openfolder + ".jpg", 'wb')
 
                 f.write(raw_img)
                 f.close()
@@ -59,7 +64,12 @@ class Agent:
                 qcopy = ''.join(x for x in q)
             else:
                 qcopy = q.replace(' ', '')
-            if os.path.exists(self.directory + "/images/" + qcopy + ".jpg"):
+
+            if osname == 'Windows':
+                openfolder = self.directory + "\\images\\" + qcopy
+            else:
+                openfolder = self.directory + "/images/" + qcopy
+            if os.path.exists(openfolder + ".jpg"):
                 continue
             if isinstance(q, list):
                 q = '+'.join(x for x in q)
@@ -96,7 +106,11 @@ class Environment:
         :param tagset: tag set for the text
         :param directory: parent directory
         """
-        if not os.path.exists(directory + '/images'):
-            os.makedirs(directory + '/images')
+        if osname == 'Windows':
+            openfolder = directory + '\\images'
+        else:
+            openfolder = directory + '/images'
+        if not os.path.exists(openfolder):
+            os.makedirs(openfolder)
         a = Agent(query, tagset, directory)
         a.retrieveImages()
