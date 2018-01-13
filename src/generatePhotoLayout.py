@@ -353,24 +353,33 @@ class Environment:
 
         beta = 3
         imgdata = {}
-        for i, n in enumerate(nouns):
-            try:
-                # t = word_score[n]
-                if isinstance(n, list):
-                    n = ''.join(x for x in n)
-                else:
-                    n = n.replace(' ', '')
-                if osname == 'Windows':
-                    openfolder = directory + '\\images\\'
-                else:
-                    openfolder = directory + '/images/'
-                im = Image.open(openfolder + n + '.jpg')
-                w, h = im.size
-                ar = float(w) / float(h)
-                t = random.randint(1, 5)
-                imgdata[n] = ((ar, t), im.size)
-            except:
-                pass
+        if nouns != [] and filename != '':
+            for i, n in enumerate(nouns):
+                try:
+                    # t = word_score[n]
+                    if isinstance(n, list):
+                        n = ''.join(x for x in n)
+                    else:
+                        n = n.replace(' ', '')
+                    im = Image.open(directory + '/images/' + n + '.jpg')
+                    w, h = im.size
+                    ar = float(w) / float(h)
+                    t = random.randint(1, 5)
+                    imgdata[n] = ((ar, t), im.size)
+                except:
+                    pass
+        else:
+            for files in os.listdir(directory):
+                try:
+                    if files.endswith('.jpg'):
+                        fname = files.split('.jpg')[0]
+                        im = Image.open(directory + '/' + files)
+                        w, h = im.size
+                        ar = float(w) / float(h)
+                        t = random.randint(1, 5)
+                        imgdata[fname] = ((ar, t), im.size)
+                except:
+                    pass
         ga = Agent(canvasw, canvash, beta, imgdata)
         indi = ga.main()
         indi.show()
@@ -397,23 +406,41 @@ class Environment:
                         # print c.data.name, c.data.x1, c.data.y1, c.data.width, c.data.height
 
         for i in range(len(imgdata), len(indi.nodes) + 1):
-            node = indi.get_node(i)
-            if osname == 'Windows':
-                name = directory + '\\images\\' + node.data.name + '.jpg'
-            else:
-                name = directory + '/images/' + node.data.name + '.jpg'
+            try:
+                node = indi.get_node(i)
+                node.data.width = round(float(node.data.width), 2)
+                node.data.height = round(float(node.data.height), 2)
+                if filename == '':
+                    foldername = ''
+                else:
+                    foldername = 'images'
 
-            im = Image.open(name)
-            im = im.resize((int(node.data.width), int(node.data.height)), Image.ANTIALIAS)
-            imgkey = imgdata.keys()[i - len(imgdata)]
-            index = 0
-            for index, n in enumerate(nouns):
-                n = ''.join(x for x in n)
-                if n == node.data.name:
-                    break
-            positions = "position:absolute;top:" + str(node.data.y1) + ";left:" + str(node.data.x1) + \
+                if osname == 'Windows':
+                    name = directory + '\\'+foldername+'\\' + node.data.name + '.jpg'
+                else:
+                    name = directory + '/'+foldername+'/' + node.data.name + '.jpg'
+
+                im = Image.open(name)
+                im = im.resize((int(node.data.width), int(node.data.height)), Image.ANTIALIAS)
+                imgkey = imgdata.keys()[i - len(imgdata)]
+                index = 0
+                for index, n in enumerate(nouns):
+                    n = ''.join(x for x in n)
+                    if n == node.data.name:
+                        break
+                positions = "position:absolute;top:" + str(node.data.y1) + ";left:" + str(node.data.x1) + \
                     ";width:" + str(int(node.data.width)) + ";height:" + str(int(node.data.height))
-            img = img + "<img style=" + positions + " src=" + name + " title=" + str(index + 1) + "></img>"
+                img = img + "<img style=" + positions + " src=" + name + "></img>"
+            except Exception as e:
+                if "height and width must be > 0" in e:
+                    print "Unable to include all images in the canvas."
+                    print "Increase the size of the canvas so that all the images can fit."
+                    print "For 150 images, a canvas of size > 7500x7500 is recommended."
+                    print "Please try again."
+                    return
+                else:
+                    print e
+                pass
 
         html = html + img + """</html>"""
 
@@ -429,7 +456,13 @@ class Environment:
             openfolder = directory + '\\results\\'
         else:
             openfolder = directory + '/results/'
-        with open(openfolder + filename.split('.txt')[0] + '.html', 'w') as f:
-            f.write(str(soup.prettify('utf-8')))
+        if filename != '':
+            with open(openfolder + filename.split('.txt')[0] + '.html', 'w') as f:
+                f.write(str(soup.prettify('utf-8')))
+            print "The collage is saved in " + openfolder + filename.split('.txt')[0] + ".html\n"
+        else:
+            with open(openfolder + 'collage.html', 'w') as f:
+                f.write(str(soup.prettify('utf-8')))
+            print "The collage is saved in " + directory + "/results/collage.html\n"
 
-        print "The collage is saved in " + openfolder + filename.split('.txt')[0] + ".html\n"
+
