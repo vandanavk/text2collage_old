@@ -14,6 +14,6 @@ def text2collage():
 if __name__ == "__main__":
     try:
         foldername = raw_input("Enter folder that contains images: ")
-        collageOfImages(foldername)
+        collageOfImages(os.path.abspath(foldername))
     except Exception as e:
         print e
