@@ -9,6 +9,7 @@ import codecs
 
 import generatePhotoLayout
 import retrieveImageFromURL
+import imageEmphasis
 
 
 class Agent:
@@ -26,6 +27,7 @@ class Agent:
         """
         self.text = t
         self.sentences = nltk.sent_tokenize(self.text)
+        self.phraseScore = []
         f = codecs.open('stopwords.txt', encoding='utf-8')
         stopw = f.read()
         stopwords = stopw.split(',')
@@ -41,6 +43,7 @@ class Agent:
             s = re.sub('[' + string.punctuation + ']', '', self.sentences[0])
             self.r.extract_keywords_from_text(s)
             rp = self.r.get_ranked_phrases()
+            self.phraseScore.append(self.r.get_ranked_phrases_with_scores())
             final_nouns = []
             for n in rp:
                 tokens = nltk.tokenize.word_tokenize(n)
@@ -58,6 +61,7 @@ class Agent:
             s = re.sub('[' + string.punctuation + ']', '', s)
             self.r.extract_keywords_from_text(s)
             rp = self.r.get_ranked_phrases()
+            self.phraseScore.append(self.r.get_ranked_phrases_with_scores())
             final_nouns = []
             for n in rp:
                 tokens = nltk.tokenize.word_tokenize(n)
@@ -105,6 +109,9 @@ class Agent:
                             final_nouns.append(item)
             nouns.append(final_nouns)
         return nouns
+
+    def getPhraseScore(self):
+        return self.phraseScore
 
 
 class Environment:
@@ -172,9 +179,12 @@ class Environment:
                 print "\n"
 
                 time_init = time()
-                retrieveImageFromURL.Environment(nouns, meaningset, directory)
+                imageList = retrieveImageFromURL.Environment().main(nouns, meaningset, directory)
                 total_time = time() - time_init
                 print "Total time for image retrieval: %.3f seconds." % total_time
+
+                imageEmphasis.emphasisFromText(a.getPhraseScore(), imageList)
+
                 time_init = time()
                 generatePhotoLayout.Environment(nouns, filename, directory)
                 total_time = time() - time_init

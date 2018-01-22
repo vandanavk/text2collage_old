@@ -54,6 +54,7 @@ class Agent:
         Sort image links in decreasing order of keyword overlap value.
         Call saveImage
         """
+        imageList = []
         for i, q in enumerate(self.query):
             matchingtags = {}
             querytag = []
@@ -64,6 +65,8 @@ class Agent:
                 qcopy = ''.join(x for x in q)
             else:
                 qcopy = q.replace(' ', '')
+
+            imageList.append(qcopy)
 
             if osname == 'Windows':
                 openfolder = self.directory + "\\images\\" + qcopy
@@ -87,18 +90,10 @@ class Agent:
 
             sortedmatchingtag = sorted(matchingtags, key=matchingtags.get, reverse=True)
             self.saveImages(sortedmatchingtag, qcopy, q)
+        return imageList
 
 
 class Environment:
-    def __init__(self, query, tagset, directory):
-        """
-
-        :param query: query keywords for the text
-        :param tagset: tag set for the text
-        :param directory: parent directory
-        """
-        self.main(query, tagset, directory)
-
     def main(self, query, tagset, directory):
         """
         Call the Agent to retrieve and save images
@@ -113,4 +108,4 @@ class Environment:
         if not os.path.exists(openfolder):
             os.makedirs(openfolder)
         a = Agent(query, tagset, directory)
-        a.retrieveImages()
+        return a.retrieveImages()

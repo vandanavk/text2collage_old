@@ -1,10 +1,13 @@
 import processText
 import generatePhotoLayout
+import imageEmphasis
 import os
 
 
 def collageOfImages(foldername):
-    # directory = os.path.dirname(os.getcwd())
+    print "Emphasis values can be provided in a CSV file. By default, random values are assigned."
+    filename = raw_input("Enter the absolute path to the file containing image emphasis values: ")
+    imageEmphasis.emphasisFromFile(filename)
     generatePhotoLayout.Environment([], '', foldername)
 
 

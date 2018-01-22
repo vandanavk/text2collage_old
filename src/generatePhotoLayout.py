@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from treelib import *
 from PIL import Image
 from PIL import ImageFile
+import pickle
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -351,6 +352,21 @@ class Environment:
         if h:
             canvash = int(h)
 
+        # Get image emphasis
+        imgemphasis = {}
+        try:
+            f = open('imgEmphasis.pkl', 'rb')
+            imgemphasis = pickle.load(f)
+            f.close()
+        except:
+            pass
+
+        maxemphasis = 5
+        minemphasis = 1
+        if imgemphasis != {}:
+            maxemphasis = max(imgemphasis.values())
+            minemphasis = min(imgemphasis.values())
+
         beta = 3
         imgdata = {}
         if nouns != [] and filename != '':
@@ -361,23 +377,42 @@ class Environment:
                         n = ''.join(x for x in n)
                     else:
                         n = n.replace(' ', '')
-                    im = Image.open(directory + '/images/' + n + '.jpg')
+                    n = n + '.jpg'
+                    im = Image.open(directory + '/images/' + n)
                     w, h = im.size
                     ar = float(w) / float(h)
-                    t = random.randint(1, 5)
-                    imgdata[n] = ((ar, t), im.size)
+                    t = 1
+                    if imgemphasis == {}:
+                        t = random.randint(1, 5)
+                    else:
+                        # scale emphasis to a range 1-5
+                        emphRange = maxemphasis - minemphasis
+                        if emphRange == 0 or n not in imgemphasis:
+                            t = 1
+                        else:
+                            t = (((imgemphasis[n] - minemphasis) * 4) / emphRange) + 1
+                    imgdata[n] = ((ar, int(t)), im.size)
                 except:
                     pass
         else:
             for files in os.listdir(directory):
                 try:
-                    if files.endswith('.jpg'):
-                        fname = files.split('.jpg')[0]
+                    if files.endswith(('.jpg', '.png', '.jpeg')):
+                        fname = os.path.splitext(os.path.basename(files))[0]
                         im = Image.open(directory + '/' + files)
                         w, h = im.size
                         ar = float(w) / float(h)
-                        t = random.randint(1, 5)
-                        imgdata[fname] = ((ar, t), im.size)
+                        t = 1
+                        if imgemphasis == {}:
+                            t = random.randint(1, 5)
+                        else:
+                            # scale emphasis to a range 1-5
+                            emphRange = maxemphasis - minemphasis
+                            if emphRange == 0 or fname not in imgemphasis:
+                                t = 1
+                            else:
+                                t = (((imgemphasis[fname] - minemphasis) * 4) / emphRange) + 1
+                        imgdata[files] = ((ar, int(t)), im.size)
                 except:
                     pass
         ga = Agent(canvasw, canvash, beta, imgdata)
@@ -416,9 +451,9 @@ class Environment:
                     foldername = 'images'
 
                 if osname == 'Windows':
-                    name = directory + '\\'+foldername+'\\' + node.data.name + '.jpg'
+                    name = directory + '\\'+foldername+'\\' + node.data.name
                 else:
-                    name = directory + '/'+foldername+'/' + node.data.name + '.jpg'
+                    name = directory + '/'+foldername+'/' + node.data.name
 
                 im = Image.open(name)
                 im = im.resize((int(node.data.width), int(node.data.height)), Image.ANTIALIAS)
