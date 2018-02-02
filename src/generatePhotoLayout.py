@@ -397,7 +397,7 @@ class Environment:
         else:
             for files in os.listdir(directory):
                 try:
-                    if files.endswith(('.jpg', '.png', '.jpeg')):
+                    if files.endswith(('.jpg', '.png', '.jpeg', '.JPG', '.PNG', '.JPEG')):
                         fname = os.path.splitext(os.path.basename(files))[0]
                         im = Image.open(directory + '/' + files)
                         w, h = im.size
