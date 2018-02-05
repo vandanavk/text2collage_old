@@ -69,7 +69,9 @@ class Agent:
             name = self.imgdata.keys()[i]
             iTree.create_node(name, nodenum, parent=(nodenum / 2), data=LayoutNode(name, w, h))
             nodenum += 1
-        for i in range(len(iTree.nodes), 1, -1):
+        #bug should also consider root node when computing ar_root
+        #for i in range(len(iTree.nodes), 1, -1):
+        for i in range(len(iTree.nodes), 0, -1):
             node = iTree.get_node(i)
             if len(node.fpointer) == 0:
                 imgkey = self.imgdata.keys()[i - len(self.imgdata)]
@@ -218,7 +220,9 @@ class Agent:
         recomputed. This data is width, height, and aspect ratio.
         :param indi: the tree for which width and height is being recomputed
         """
-        for i in range(len(indi.nodes), 1, -1):
+        #bug: should also consider root node when computing ar_root
+        #for i in range(len(indi.nodes), 1, -1):
+        for i in range(len(indi.nodes), 0, -1):
             node = indi.get_node(i)
             if len(node.fpointer) == 0:
                 imgkey = self.imgdata.keys()[i - len(self.imgdata)]
