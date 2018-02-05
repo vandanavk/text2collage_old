@@ -63,7 +63,8 @@ class Agent:
             nodenum += 1
         usedimage = [x for x in range(n)]
         random.shuffle(usedimage)
-        for i in range(len(usedimage)):
+        #for i in range(len(usedimage)): # this is a bug
+        for i in usedimage:
             w, h = self.cw, self.ch
             name = self.imgdata.keys()[i]
             iTree.create_node(name, nodenum, parent=(nodenum / 2), data=LayoutNode(name, w, h))
@@ -155,7 +156,7 @@ class Agent:
         stats.register("avg", np.mean)
 
         algorithms.eaSimple(population=pop, toolbox=self.toolbox,
-                            cxpb=0.7, mutpb=0.2, ngen=500, stats=stats,
+                            cxpb=0.7, mutpb=0.2, ngen=5000, stats=stats,
                             halloffame=hof, verbose=False)
 
         return hof[0]
