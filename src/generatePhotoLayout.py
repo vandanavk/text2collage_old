@@ -43,14 +43,7 @@ class Agent:
         name = random.sample(set('VH'), 1)
         return name[0]
 
-    def initIndividual(self, icls, n):
-        """
-        Initialize the individual - full binary tree
-        Compute height, width and aspect ratio of each node
-        according to the paper by Fan.
-        :param n: number of images
-        :return: Tree
-        """
+    def makeTree(self, n):
         nodenum = 1
         iTree = Tree()
         name = self.getInternalNode()
@@ -61,46 +54,65 @@ class Agent:
             name = self.getInternalNode()
             iTree.create_node(name, nodenum, parent=(nodenum / 2), data=LayoutNode(name, w, h))
             nodenum += 1
+
         usedimage = [x for x in range(n)]
         random.shuffle(usedimage)
-        #for i in range(len(usedimage)): # this is a bug
         for i in usedimage:
             w, h = self.cw, self.ch
             name = self.imgdata.keys()[i]
             iTree.create_node(name, nodenum, parent=(nodenum / 2), data=LayoutNode(name, w, h))
             nodenum += 1
-        #bug should also consider root node when computing ar_root
-        #for i in range(len(iTree.nodes), 1, -1):
-        for i in range(len(iTree.nodes), 0, -1):
-            node = iTree.get_node(i)
+        return iTree
+
+    def solveLayout(self, tree):
+        for i in range(len(tree.nodes), 0, -1):
+            node = tree.get_node(i)
             if len(node.fpointer) == 0:
                 imgkey = self.imgdata.keys()[i - len(self.imgdata)]
                 (ar, ti), pix = self.imgdata[imgkey]
             else:
                 if node.data.name == 'V':
                     ar = 0
-                    for c in sorted(iTree.children(i)):
+                    for c in sorted(tree.children(i)):
                         ar += c.data.aspectratio
                 if node.data.name == 'H':
                     sumar = 0
                     multar = 1
-                    for c in sorted(iTree.children(i)):
+
+                    # what is the purpose of sorting?
+                    for c in sorted(tree.children(i)):
                         sumar += c.data.aspectratio
                         multar *= c.data.aspectratio
                     ar = float(multar) / float(sumar)
             node.data.aspectratio = ar
-        for i in range(1, len(iTree.nodes) + 1):
-            node = iTree.get_node(i)
+
+        for i in range(1, len(tree.nodes) + 1):
+            node = tree.get_node(i)
             ar = node.data.aspectratio
+            # root node, cw and ch are canvas width and height
             if node.bpointer == None:
                 node.data.width = min(self.cw, ar * self.ch) - self.beta
                 node.data.height = float(node.data.width) / float(ar) - self.beta
             else:
-                p = iTree.get_node(i / 2)
+                p = tree.get_node(i / 2)
                 pn, pw, ph = p.data.name, p.data.width, p.data.height
+                # print i, pn, pw, ph
                 node.data.width = min(pw, ar * ph) - self.beta
                 node.data.height = float(node.data.width) / float(ar) - self.beta
-                # print node.data.name, node.data.width, node.data.height
+                # print i, node.data.name, node.data.width, node.data.height, ar
+        return
+
+    def initIndividual(self, icls, n):
+        """
+        Initialize the individual - full binary tree
+        Compute height, width and aspect ratio of each node
+        according to the paper by Fan.
+        :param n: number of images
+        :return: Tree
+        """
+        iTree = self.makeTree(n)
+        self.solveLayout(iTree)
+
         return icls(iTree)
 
     def initPopulation(self, pcls, ind_init, n):
@@ -220,38 +232,7 @@ class Agent:
         recomputed. This data is width, height, and aspect ratio.
         :param indi: the tree for which width and height is being recomputed
         """
-        #bug: should also consider root node when computing ar_root
-        #for i in range(len(indi.nodes), 1, -1):
-        for i in range(len(indi.nodes), 0, -1):
-            node = indi.get_node(i)
-            if len(node.fpointer) == 0:
-                imgkey = self.imgdata.keys()[i - len(self.imgdata)]
-                (ar, ti), pix = self.imgdata[imgkey]
-            else:
-                if node.data.name == 'V':
-                    ar = 0
-                    for c in sorted(indi.children(i)):
-                        ar += c.data.aspectratio
-                if node.data.name == 'H':
-                    sumar = 0
-                    multar = 1
-                    for c in sorted(indi.children(i)):
-                        sumar += c.data.aspectratio
-                        multar *= c.data.aspectratio
-                    ar = float(multar) / float(sumar)
-            node.data.aspectratio = ar
-        for i in range(1, len(indi.nodes) + 1):
-            node = indi.get_node(i)
-            ar = node.data.aspectratio
-            if node.bpointer == None:
-                node.data.width = min(self.cw, ar * self.ch) - self.beta
-                node.data.height = float(node.data.width) / float(ar) - self.beta
-            else:
-                p = indi.get_node(i / 2)
-                pn, pw, ph = p.data.name, p.data.width, p.data.height
-                node.data.width = min(pw, ar * ph) - self.beta
-                node.data.height = float(node.data.width) / float(ar) - self.beta
-                # print node.data.name, node.data.width, node.data.height
+        self.solveLayout(indi)
 
     # def __create_value(self, node):
     #     """
