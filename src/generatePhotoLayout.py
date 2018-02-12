@@ -405,6 +405,8 @@ class Environment:
         indi = ga.main()
         indi.show()
 
+        canvas = Image.new('RGB', (canvasw, canvash))
+
         html = """
                 <html>
                 <head>
@@ -443,6 +445,8 @@ class Environment:
 
                 im = Image.open(name)
                 im = im.resize((int(node.data.width), int(node.data.height)), Image.ANTIALIAS)
+                canvas.paste(im, (node.data.x1, node.data.y1))
+
                 imgkey = imgdata.keys()[i - len(imgdata)]
                 index = 0
                 for index, n in enumerate(nouns):
@@ -480,10 +484,12 @@ class Environment:
         if filename != '':
             with open(openfolder + filename.split('.txt')[0] + '.html', 'w') as f:
                 f.write(str(soup.prettify('utf-8')))
+            canvas.save(openfolder + filename.split('.txt')[0] + '.jpg')
             print "The collage is saved in " + openfolder + filename.split('.txt')[0] + ".html\n"
         else:
             with open(openfolder + 'collage.html', 'w') as f:
                 f.write(str(soup.prettify('utf-8')))
+            canvas.save(openfolder + 'collage.jpg')
             print "The collage is saved in " + directory + "/results/collage.html\n"
 
 
