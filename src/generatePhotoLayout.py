@@ -7,6 +7,7 @@ from treelib import *
 from PIL import Image
 from PIL import ImageFile
 import pickle
+import matplotlib.pyplot as plt
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -154,7 +155,7 @@ class Agent:
         # Register toolbox functions
         self.toolbox.register("evaluate", self.__get_fitness)
         self.toolbox.register("mate", self.cxOnePointCopy)
-        self.toolbox.register("mutate", self.__mutate, indpb=0.02)
+        self.toolbox.register("mutate", self.__mutate, indpb=0.2)
         self.toolbox.register("select", tools.selRoulette)
 
     def main(self):
@@ -167,13 +168,12 @@ class Agent:
         # hof = tools.HallOfFame(maxsize=1)
         stats = tools.Statistics(lambda ind: ind.fitness.values)
         stats.register("min", np.min)
-        stats.register("avg", np.mean)
 
-        algorithms.eaSimple(population=pop, toolbox=self.toolbox,
-                            cxpb=0.7, mutpb=0.2, ngen=5000, stats=stats,
+        pop, log = algorithms.eaSimple(population=pop, toolbox=self.toolbox,
+                            cxpb=0.7, mutpb=0.2, ngen=500, stats=stats,
                             halloffame=hof, verbose=False)
 
-        return hof[0]
+        return hof[0], log
 
     def getk(self, si, ti):
         """
@@ -407,8 +407,16 @@ class Environment:
             imgdata[imgkey] = ((ar, round(ti, 2)), pix)
 
         ga = Agent(canvasw, canvash, beta, imgdata)
-        indi = ga.main()
+        indi, stats = ga.main()
         indi.show()
+
+        x = [i for i in range(len(stats))]
+        y = [float(stats[i]['min']) for i in range(len(stats))]
+        plt.plot(x, y)
+        plt.xlabel('Generations')
+        plt.ylabel('Fitness')
+        plt.title('Fitness value over GA iterations')
+        plt.show()
 
         canvas = Image.new('RGB', (canvasw, canvash))
 
