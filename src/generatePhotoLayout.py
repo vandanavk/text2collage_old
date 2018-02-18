@@ -197,10 +197,6 @@ class Agent:
         lam = 0.15
         sumti = 0
         S = self.cw * self.ch
-        for i in range(len(self.imgdata)):
-            imgkey = self.imgdata.keys()[i]
-            (ar, ti), pix = self.imgdata[imgkey]
-            sumti += ti
 
         for i in range(len(self.imgdata), len(individual.nodes) + 1):
             node = individual.get_node(i)
@@ -209,7 +205,6 @@ class Agent:
             si = float(wi * hi) / float(S)
             imgkey = self.imgdata.keys()[i - len(self.imgdata)]
             (ar, ti), pix = self.imgdata[imgkey]
-            ti = float(ti) / float(sumti)
             k = self.getk(si, ti)
             SiList.append(si)
             TiList.append(ti)
@@ -355,6 +350,7 @@ class Environment:
 
         beta = 3
         imgdata = {}
+        sumt = 0
         if nouns != [] and filename != '':
             for i, n in enumerate(nouns):
                 try:
@@ -377,6 +373,7 @@ class Environment:
                             t = 1
                         else:
                             t = (((imgemphasis[n] - minemphasis) * 4) / emphRange) + 1
+                    sumt += t
                     imgdata[n] = ((ar, int(t)), im.size)
                 except:
                     pass
@@ -398,9 +395,17 @@ class Environment:
                                 t = 1
                             else:
                                 t = (((imgemphasis[fname] - minemphasis) * 4) / emphRange) + 1
+                        sumt += t
                         imgdata[files] = ((ar, int(t)), im.size)
                 except:
                     pass
+
+        for i in range(len(imgdata)):
+            imgkey = imgdata.keys()[i]
+            (ar, ti), pix = imgdata[imgkey]
+            ti = float(ti) / float(sumt)
+            imgdata[imgkey] = ((ar, round(ti, 2)), pix)
+
         ga = Agent(canvasw, canvash, beta, imgdata)
         indi = ga.main()
         indi.show()
