@@ -4,8 +4,12 @@ import imageEmphasis
 import os
 import argparse
 
-parser = argparse.ArgumentParser(description='Text to Collage')
-parser.add_argument('-o', default="collection", choices=['text', 'collection'], nargs=1,
+parser = argparse.ArgumentParser(description='This library converts a given paragraph '
+                                             'of text into an equivalent image illustration, '
+                                             'represented as a collage of images. It also gives '
+                                             'the user the option of creating a collage of '
+                                             'images from a folder containing a set of images.')
+parser.add_argument('-o', default=["collection"], choices=['text', 'collection'], nargs=1,
                     help='Choose if text needs to be converted to a collage of images'
                          'or a folder containing images needs to be represented as a collage')
 parser.add_argument('-d', nargs=1,
