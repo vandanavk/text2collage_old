@@ -120,10 +120,10 @@ class Environment:
     providing percept sequences to the Agent, and calling 
     other environments.
     """
-    def __init__(self):
-        self.main()
+    def __init__(self, foldername, imp, canvasw, canvash, beta, GAparams):
+        self.main(foldername, imp, canvasw, canvash, beta, GAparams)
 
-    def main(self):
+    def main(self, foldername, imp, canvasw, canvash, beta, GAparams):
         """
             This is the starting point for the entire system.
             The function is responsible for:
@@ -133,28 +133,26 @@ class Environment:
             3. Passing on tags and keywords as information to the Image 
             Retrieval module's Environment.
             4. Call layout generator
+            :param foldername: Absolute path of the folder containing text or image files
+            :param imp: Importance estimator
+            :param canvasw: Collage canvas width
+            :param canvash: Collage canvas height
+            :param beta: Inter-image space in collage
+            :param GAparams: GA parameters for collage generation
         """
         directory = os.path.dirname(os.getcwd())
-        print "The parent directory is " + directory
-        print "Please ensure the directory structure is as follows before proceeding.\n"
-        print directory
-        print "|___ src"
-        print "|___ input"
-        print "Note: the input folder name can be different\n"
-        folder = raw_input("Enter the name of the folder that contains input text: ")
+
+        folder = foldername
 
         osname = os.uname()[0]
-        if osname == 'Windows':
-            openfolder = directory + "\\" + folder
-        else:
-            openfolder = directory + '/' + folder
-        for filename in os.listdir(openfolder):
+
+        for filename in os.listdir(folder):
             if filename.endswith('.txt'):
                 print "\nConverting "+filename+" to an illustration"
                 if osname == 'Windows':
-                    openfile = directory + '\\' + folder + '\\' + filename
+                    openfile = folder + '\\' + filename
                 else:
-                    openfile = directory + '/' + folder + '/' + filename
+                    openfile = folder + '/' + filename
                 f = open(openfile, 'r')
                 text = f.read().decode('ascii', 'ignore')
                 f.close()
@@ -183,15 +181,10 @@ class Environment:
                 total_time = time() - time_init
                 print "Total time for image retrieval: %.3f seconds." % total_time
 
-                imageEmphasis.emphasisFromText(a.getPhraseScore(), imageList)
+                if imp == 'auto':
+                    imageEmphasis.emphasisFromText(a.getPhraseScore(), imageList)
 
                 time_init = time()
-                generatePhotoLayout.Environment(nouns, filename, directory)
+                generatePhotoLayout.Environment(nouns, filename, directory, imp, canvasw, canvash, beta, GAparams)
                 total_time = time() - time_init
                 print "Total time for GA: %.3f seconds." % total_time
-
-if __name__ == "__main__":
-    try:
-        Environment()
-    except Exception as e:
-        print e

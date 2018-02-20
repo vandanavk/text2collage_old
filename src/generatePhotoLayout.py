@@ -129,9 +129,14 @@ class Agent:
             color.append(numimages)
         return pcls(ind_init(c) for c in color)
 
-    def __init__(self, cw, ch, b, imgdata):
+    def __init__(self, cw, ch, b, imgdata, gen, popsize, Pc, Pm, lam):
         """
         Initialize GA toolbox
+        :param gen: Number of GA generations
+        :param popsize: Population size
+        :param Pc: Crossover probability
+        :param Pm: Mutation probability
+        :param lam: Lambda - fitness function parameter
         :param cw: canvas width
         :param ch: canvas height
         :param b: beta (Space between images)
@@ -141,6 +146,11 @@ class Agent:
         self.ch = ch
         self.beta = b
         self.imgdata = imgdata
+        self.ngen = gen
+        self.popsize = popsize
+        self.Pc = Pc
+        self.Pm = Pm
+        self.lam = lam
         # Instantiate creator variables
         creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
         creator.create("Individual", Tree, fitness=creator.FitnessMin)
@@ -163,14 +173,14 @@ class Agent:
         Execute the GP algorithm to find a suitable layout
         :return: Best individual
         """
-        pop = self.toolbox.population(n=10)
+        pop = self.toolbox.population(n=self.popsize)
         hof = tools.ParetoFront(similar=np.array_equal)
         # hof = tools.HallOfFame(maxsize=1)
         stats = tools.Statistics(lambda ind: ind.fitness.values)
         stats.register("min", np.min)
 
         pop, log = algorithms.eaSimple(population=pop, toolbox=self.toolbox,
-                            cxpb=0.7, mutpb=0.2, ngen=500, stats=stats,
+                            cxpb=self.Pc, mutpb=self.Pm, ngen=self.ngen, stats=stats,
                             halloffame=hof, verbose=False)
 
         return hof[0], log
@@ -194,7 +204,7 @@ class Agent:
         SiList = []
         TiList = []
         KiList = []
-        lam = 0.15
+        lam = self.lam
         sumti = 0
         S = self.cw * self.ch
 
@@ -306,41 +316,43 @@ class Environment:
     Interface with GA agent
     Save results
     """
-    def __init__(self, n, f, d):
+    def __init__(self, n, f, d, imp, canvasw, canvash, beta, GAparams):
         """
 
         :param n: query keywords
         :param f: input filename
         :param d: parent directory
+        :param imp: Random/Auto/User-specified importance estimator
+        :param canvasw: Collage canvas width
+        :param canvash: Collage canvas height
+        :param beta: Inter-image space
+        :param GAparams: GA parameters
         """
-        self.main(n, f, d)
+        self.main(n, f, d, imp, canvasw, canvash, beta, GAparams)
 
-    def main(self, nouns, filename, directory):
+    def main(self, nouns, filename, directory, imp, canvasw, canvash, beta, GAparams):
         """
         Process image data, generate HTML files to show the layout,
         compute left,top position for every image in the best individual
         :param nouns: query keywords
         :param filename: input text filename
         :param directory: parent directory
+        :param imp: Random/Auto/User-specified importance estimator
+        :param canvasw: Collage canvas width
+        :param canvash: Collage canvas height
+        :param beta: Inter-image space
+        :param GAparams: GA parameters
         """
-        canvasw, canvash = 1920, 1080
-        print "GA to generate a compact collage begins..."
-        print "Enter the desired canvas size: "
-        w = raw_input("Width ")
-        h = raw_input("Height ")
-        if w:
-            canvasw = int(w)
-        if h:
-            canvash = int(h)
 
         # Get image emphasis
         imgemphasis = {}
-        try:
-            f = open('imgEmphasis.pkl', 'rb')
-            imgemphasis = pickle.load(f)
-            f.close()
-        except:
-            pass
+        if imp == 'auto' or imp == 'user':
+            try:
+                f = open('imgEmphasis.pkl', 'rb')
+                imgemphasis = pickle.load(f)
+                f.close()
+            except:
+                pass
 
         maxemphasis = 5
         minemphasis = 1
@@ -348,7 +360,6 @@ class Environment:
             maxemphasis = max(imgemphasis.values())
             minemphasis = min(imgemphasis.values())
 
-        beta = 3
         imgdata = {}
         sumt = 0
         if nouns != [] and filename != '':
@@ -406,7 +417,8 @@ class Environment:
             ti = float(ti) / float(sumt)
             imgdata[imgkey] = ((ar, round(ti, 2)), pix)
 
-        ga = Agent(canvasw, canvash, beta, imgdata)
+        gen, popsize, Pc, Pm, lam = GAparams
+        ga = Agent(canvasw, canvash, beta, imgdata, gen, popsize, Pc, Pm, lam)
         indi, stats = ga.main()
         indi.show()
 
