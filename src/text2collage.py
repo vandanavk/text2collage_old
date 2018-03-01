@@ -39,6 +39,7 @@ if __name__ == "__main__":
         beta = args['b']
         imp = args['i']
         GAparams = args['GA']
+        GAparams[:2] = map(int, GAparams[:2])
         option = args['o'][0]
 
         foldername = os.path.abspath(args['d'][0])
