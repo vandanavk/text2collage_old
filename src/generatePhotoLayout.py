@@ -101,6 +101,16 @@ class Agent:
                 node.data.width = min(pw, ar * ph) - self.beta
                 node.data.height = float(node.data.width) / float(ar) - self.beta
                 # print i, node.data.name, node.data.width, node.data.height, ar
+
+        for i in range(len(self.imgdata), len(tree.nodes) + 1):
+            imgkey = self.imgdata.keys()[i - len(self.imgdata)]
+            (ar, ti), pix = self.imgdata[imgkey]
+            node = tree.get_node(i)
+            w = node.data.width
+            h = node.data.height
+            ar = float(w) / float(h)
+            self.imgdata[imgkey] = ((ar, ti), (w, h))
+
         return
 
     def initIndividual(self, icls, n):
