@@ -239,15 +239,6 @@ class Agent:
         """
         self.solveLayout(indi)
 
-    # def __create_value(self, node):
-    #     """
-    #     As part of mutation, change the name of the internal node
-    #     :param node: node of the tree
-    #     :return: changed name of the internal node
-    #     """
-    #     node.data.name = self.getInternalNode()
-    #     return node
-
     # Mutate genes
     def __mutate(self, individual, indpb):
         """
@@ -263,19 +254,18 @@ class Agent:
                     node.tag = node.data.name = 'V'
                 else:
                     node.tag = node.data.name = 'H'
-                # self.__create_value(individual.get_node(i))
 
-        # for i in range(len(self.imgdata), len(individual.nodes) + 1):
-        #     if random.random() <= indpb:
-        #         j = i
-        #         while j == i:
-        #             j = random.randint(len(self.imgdata), len(individual.nodes))
-        #         basenode = individual.get_node(i)
-        #         swapnode = individual.get_node(j)
-        #         basename = basenode.data.name
-        #         swapname = swapnode.data.name
-        #         basenode.tag = basenode.data.name = swapname
-        #         swapnode.tag = swapnode.data.name = basename
+        for i in range(len(self.imgdata), len(individual.nodes) + 1):
+            if random.random() <= indpb:
+                j = i
+                while j == i:
+                    j = random.randint(len(self.imgdata), len(individual.nodes))
+                basenode = individual.get_node(i)
+                swapnode = individual.get_node(j)
+                basename = basenode.data.name
+                swapname = swapnode.data.name
+                basenode.tag = basenode.data.name = swapname
+                swapnode.tag = swapnode.data.name = basename
 
         self.recomputeWH(individual)
         return individual,
@@ -287,24 +277,24 @@ class Agent:
         :param ind2: second individual
         :return: 2 individuals after crossover
         """
-        size = len(self.imgdata)
-        cxpoint = random.randint(2, size - 1)
-        p1 = p2 = cxpoint / 2
-        tempsubtree2 = ind2.subtree(cxpoint)
-        tempsubtree1 = ind1.subtree(cxpoint)
+        parent1 = []
+        parent2 = []
 
-        ind1.remove_subtree(cxpoint)
-        ind2.remove_subtree(cxpoint)
+        # find the order of the images in ind1 and ind2
+        for i in range(len(self.imgdata), len(ind1.nodes) + 1):
+            node1 = ind1.get_node(i)
+            node2 = ind2.get_node(i)
+            if node1.data.name in self.imgdata:
+                parent1.append(self.imgdata.keys().index(node1.data.name))
+            if node2.data.name in self.imgdata:
+                parent2.append(self.imgdata.keys().index(node2.data.name))
 
-        ind1.paste(p1, tempsubtree2)
-        ind2.paste(p2, tempsubtree1)
+        for i in range(len(self.imgdata), len(ind1.nodes) + 1):
+            node1 = ind1.get_node(i)
+            node2 = ind2.get_node(i)
+            node1.data.name = node1.tag = self.imgdata.keys()[parent2[i - len(self.imgdata)]]
+            node2.data.name = node2.tag = self.imgdata.keys()[parent1[i - len(self.imgdata)]]
 
-        for i in range(1, len(ind1.nodes) + 1):
-            node = ind1.get_node(i)
-            sorted(node._fpointer)
-        for i in range(1, len(ind2.nodes) + 1):
-            node = ind2.get_node(i)
-            sorted(node._fpointer)
         self.recomputeWH(ind1)
         self.recomputeWH(ind2)
         return ind1, ind2
