@@ -37,7 +37,7 @@ if __name__ == "__main__":
         canvasw = args['cw'][0] if isinstance(args['cw'], list) else args['cw']
         canvash = args['ch'][0] if isinstance(args['ch'], list) else args['ch']
         beta = args['b'][0] if isinstance(args['b'], list) else args['b']
-        imp = args['i']
+        imp = args['i'][0] if isinstance(args['i'], list) else args['i']
         GAparams = args['GA']
         GAparams[:2] = map(int, GAparams[:2])
         option = args['o'][0]
