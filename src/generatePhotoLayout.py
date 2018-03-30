@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-# np.random.seed(0)
+np.random.seed(123)
 osname = os.uname()[0]
 
 class LayoutNode:
@@ -26,10 +26,11 @@ class LayoutNode:
     x1 = 0
     y1 = 0
 
-    def __init__(self, n, w, h):
+    def __init__(self, n, w, h, ar):
         self.name = n
         self.width = w
         self.height = h
+        self.aspectratio = ar
 
 
 class Agent:
@@ -48,28 +49,31 @@ class Agent:
         nodenum = 1
         iTree = Tree()
         name = self.getInternalNode()
-        iTree.create_node(name, nodenum, data=LayoutNode(name, self.cw, self.ch))
+        iTree.create_node(name, nodenum, data=LayoutNode(name, self.cw, self.ch, 1))
         nodenum += 1
         for i in range(n - 2):  # create internal nodes
             w, h = self.cw, self.ch
             name = self.getInternalNode()
-            iTree.create_node(name, nodenum, parent=(nodenum / 2), data=LayoutNode(name, w, h))
+            iTree.create_node(name, nodenum, parent=(nodenum / 2), data=LayoutNode(name, w, h, 1))
             nodenum += 1
 
         usedimage = [x for x in range(n)]
         random.shuffle(usedimage)
         for i in usedimage:
-            w, h = self.cw, self.ch
             name = self.imgdata.keys()[i]
-            iTree.create_node(name, nodenum, parent=(nodenum / 2), data=LayoutNode(name, w, h))
+            (ar, ti), pix = self.imgdata[name]
+            w, h = pix
+            iTree.create_node(name, nodenum, parent=(nodenum / 2), data=LayoutNode(name, w, h, ar))
             nodenum += 1
+
         return iTree
 
     def solveLayout(self, tree):
         for i in range(len(tree.nodes), 0, -1):
             node = tree.get_node(i)
             if len(node.fpointer) == 0:
-                imgkey = self.imgdata.keys()[i - len(self.imgdata)]
+                # imgkey = self.imgdata.keys()[i - len(self.imgdata)]
+                imgkey = node.data.name
                 (ar, ti), pix = self.imgdata[imgkey]
             else:
                 if node.data.name == 'V':
@@ -78,13 +82,11 @@ class Agent:
                         ar += c.data.aspectratio
                 if node.data.name == 'H':
                     sumar = 0
-                    multar = 1
 
                     # what is the purpose of sorting?
                     for c in sorted(tree.children(i)):
-                        sumar += c.data.aspectratio
-                        multar *= c.data.aspectratio
-                    ar = float(multar) / float(sumar)
+                        sumar += (1/ c.data.aspectratio)
+                    ar = round(float(1 / sumar), 2)
             node.data.aspectratio = ar
 
         for i in range(1, len(tree.nodes) + 1):
@@ -99,16 +101,16 @@ class Agent:
                 pn, pw, ph = p.data.name, p.data.width, p.data.height
                 # print i, pn, pw, ph
                 node.data.width = min(pw, ar * ph) - self.beta
-                node.data.height = float(node.data.width) / float(ar) - self.beta
-                # print i, node.data.name, node.data.width, node.data.height, ar
+                node.data.height = round(float(node.data.width) / float(ar), 2) - self.beta
+            # print i, node.data.name, node.data.width, node.data.height, ar
 
         for i in range(len(self.imgdata), len(tree.nodes) + 1):
-            imgkey = self.imgdata.keys()[i - len(self.imgdata)]
-            (ar, ti), pix = self.imgdata[imgkey]
             node = tree.get_node(i)
+            # imgkey = self.imgdata.keys()[i - len(self.imgdata)]
+            imgkey = node.data.name
+            (ar, ti), pix = self.imgdata[imgkey]
             w = node.data.width
             h = node.data.height
-            ar = float(w) / float(h)
             self.imgdata[imgkey] = ((ar, ti), (w, h))
 
         return
@@ -176,7 +178,7 @@ class Agent:
         self.toolbox.register("evaluate", self.__get_fitness)
         self.toolbox.register("mate", self.cxOnePointCopy)
         self.toolbox.register("mutate", self.__mutate, indpb=0.2)
-        self.toolbox.register("select", tools.selRoulette)
+        self.toolbox.register("select", tools.selTournament, tournsize=5)
 
     def main(self):
         """
@@ -184,8 +186,7 @@ class Agent:
         :return: Best individual
         """
         pop = self.toolbox.population(n=self.popsize)
-        hof = tools.ParetoFront(similar=np.array_equal)
-        # hof = tools.HallOfFame(maxsize=1)
+        hof = tools.HallOfFame(maxsize=1)
         stats = tools.Statistics(lambda ind: ind.fitness.values)
         stats.register("min", np.min)
 
@@ -223,7 +224,7 @@ class Agent:
             wi = node.data.width
             hi = node.data.height
             si = float(wi * hi) / float(S)
-            imgkey = self.imgdata.keys()[i - len(self.imgdata)]
+            imgkey = node.data.name
             (ar, ti), pix = self.imgdata[imgkey]
             k = self.getk(si, ti)
             SiList.append(si)
@@ -236,7 +237,7 @@ class Agent:
         for i in range(len(SiList)):
             C2 += SiList[i]
 
-        C2 = lam * (1 - C2)
+        C2 = lam * abs(1 - C2)
 
         fitness = C1 + C2
         return fitness,
@@ -291,19 +292,27 @@ class Agent:
         parent2 = []
 
         # find the order of the images in ind1 and ind2
-        for i in range(len(self.imgdata), len(ind1.nodes) + 1):
-            node1 = ind1.get_node(i)
-            node2 = ind2.get_node(i)
-            if node1.data.name in self.imgdata:
-                parent1.append(self.imgdata.keys().index(node1.data.name))
-            if node2.data.name in self.imgdata:
-                parent2.append(self.imgdata.keys().index(node2.data.name))
+        # for i in range(len(self.imgdata), len(ind1.nodes) + 1):
+        #     node1 = ind1.get_node(i)
+        #     node2 = ind2.get_node(i)
+        #     if node1.data.name in self.imgdata:
+        #         parent1.append(self.imgdata.keys().index(node1.data.name))
+        #     if node2.data.name in self.imgdata:
+        #         parent2.append(self.imgdata.keys().index(node2.data.name))
+        #
+        # for i in range(len(self.imgdata), len(ind1.nodes) + 1):
+        #     node1 = ind1.get_node(i)
+        #     node2 = ind2.get_node(i)
+        #     node1.data.name = node1.tag = self.imgdata.keys()[parent2[i - len(self.imgdata)]]
+        #     node2.data.name = node2.tag = self.imgdata.keys()[parent1[i - len(self.imgdata)]]
 
-        for i in range(len(self.imgdata), len(ind1.nodes) + 1):
-            node1 = ind1.get_node(i)
-            node2 = ind2.get_node(i)
-            node1.data.name = node1.tag = self.imgdata.keys()[parent2[i - len(self.imgdata)]]
-            node2.data.name = node2.tag = self.imgdata.keys()[parent1[i - len(self.imgdata)]]
+        for i in range(1, len(self.imgdata)):
+                basenode = ind1.get_node(i)
+                swapnode = ind2.get_node(i)
+                basename = basenode.data.name
+                swapname = swapnode.data.name
+                basenode.tag = basenode.data.name = swapname
+                swapnode.tag = swapnode.data.name = basename
 
         self.recomputeWH(ind1)
         self.recomputeWH(ind2)
@@ -373,7 +382,7 @@ class Environment:
                     n = n + '.jpg'
                     im = Image.open(directory + '/images/' + n)
                     w, h = im.size
-                    ar = float(w) / float(h)
+                    ar = round(float(w) / float(h), 2)
                     t = 1
                     if imgemphasis == {}:
                         t = random.randint(1, 5)
@@ -395,7 +404,7 @@ class Environment:
                         fname = os.path.splitext(os.path.basename(files))[0]
                         im = Image.open(directory + '/' + files)
                         w, h = im.size
-                        ar = float(w) / float(h)
+                        ar = round(float(w) / float(h), 2)
                         t = 1
                         if imgemphasis == {}:
                             t = random.randint(1, 5)
