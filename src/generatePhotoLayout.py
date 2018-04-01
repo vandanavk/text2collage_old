@@ -431,13 +431,14 @@ class Environment:
         indi, stats = ga.main()
         indi.show()
 
-        x = [i for i in range(len(stats))]
-        y = [float(stats[i]['min']) for i in range(len(stats))]
-        plt.plot(x, y)
-        plt.xlabel('Generations')
-        plt.ylabel('Fitness')
-        plt.title('Fitness value over GA iterations')
-        plt.show()
+        # x = [i for i in range(len(stats))]
+        # y = [float(stats[i]['min']) for i in range(len(stats))]
+        # plt.plot(x, y)
+        # plt.xticks(np.arange(min(x), max(x), 10.0))
+        # plt.xlabel('Generations')
+        # plt.ylabel('Fitness')
+        # plt.title('Fitness value over GA iterations')
+        # plt.show()
 
         canvas = Image.new('RGB', (canvasw, canvash))
 
@@ -519,11 +520,13 @@ class Environment:
             with open(openfolder + filename.split('.txt')[0] + '.html', 'w') as f:
                 f.write(str(soup.prettify('utf-8')))
             canvas.save(openfolder + filename.split('.txt')[0] + '.jpg')
-            print "The collage is saved in " + openfolder + filename.split('.txt')[0] + ".html\n"
+            print "The collage is saved in " + openfolder + filename.split('.txt')[0] + ".html"
+            print "and " + openfolder + filename.split('.txt')[0] + ".jpg\n"
         else:
             with open(openfolder + 'collage.html', 'w') as f:
                 f.write(str(soup.prettify('utf-8')))
             canvas.save(openfolder + 'collage.jpg')
-            print "The collage is saved in " + directory + "/results/collage.html\n"
+            print "The collage is saved in " + directory + "/results/collage.html"
+            print "and " + directory + "/results/collage.jpg\n"
 
 
